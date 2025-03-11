@@ -1,23 +1,31 @@
-import React, { useReducer, useEffect, useContext, useState, useRef } from 'react';
-import { taskReducer, initialState } from '../reducers/taskReducer';
+import React, { useReducer, useEffect, useContext, useState, useRef, useCallback } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import TaskFilter from './TaskFilter';
+import { taskReducer, initialState } from '../reducers/taskReducer';
 
-// Use a consistent storage key with a prefix to avoid conflicts
-const STORAGE_KEY = 'taskManager_tasks';
+// Use a simple, direct storage key
+const STORAGE_KEY = 'tasks';
 
-// Check if localStorage is available
-const isLocalStorageAvailable = () => {
+// Helper functions for working with localStorage
+const saveToStorage = (data) => {
   try {
-    const testKey = '__test__';
-    localStorage.setItem(testKey, testKey);
-    localStorage.removeItem(testKey);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     return true;
   } catch (e) {
-    console.error('LocalStorage is not available:', e);
+    console.error('Error saving to storage:', e);
     return false;
+  }
+};
+
+const loadFromStorage = () => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error('Error loading from storage:', e);
+    return [];
   }
 };
 
@@ -29,204 +37,102 @@ const TaskManager = () => {
   // State for alerts
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
   
-  // Ref to track previous tasks for comparison
-  const prevTasksRef = useRef([]);
+  // State for undo/redo functionality
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  
+  // Ref for input field
+  const titleInputRef = useRef(null);
   
   // Get theme context
   const { darkMode, toggleTheme } = useContext(ThemeContext);
   
-  // State to track if localStorage is working
-  const [localStorageWorks] = useState(isLocalStorageAvailable());
+  // Focus input field when component mounts
+  useEffect(() => {
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, []);
   
   // Load tasks from localStorage on initial render
   useEffect(() => {
-    if (!localStorageWorks) return;
+    const loadedTasks = loadFromStorage();
     
-    try {
-      const savedTasks = localStorage.getItem(STORAGE_KEY);
-      console.log('Checking localStorage on init:', savedTasks);
+    if (Array.isArray(loadedTasks) && loadedTasks.length > 0) {
+      dispatch({ type: 'LOAD_TASKS', payload: loadedTasks });
+      // Initialize history with loaded tasks
+      setHistory([loadedTasks]);
+      setHistoryIndex(0);
       
-      if (savedTasks) {
-        const parsedTasks = JSON.parse(savedTasks);
-        console.log('Found tasks to load:', parsedTasks.length, parsedTasks);
-        
-        // Ensure we're loading valid data
-        if (Array.isArray(parsedTasks)) {
-          dispatch({ type: 'LOAD_TASKS', payload: parsedTasks });
-          setAlert({
-            show: true,
-            message: `Loaded ${parsedTasks.length} tasks from storage`,
-            type: 'success'
-          });
-        } else {
-          console.warn('Stored tasks are not in expected format:', parsedTasks);
-        }
-      } else {
-        console.log('No tasks found in localStorage');
-      }
-    } catch (error) {
-      console.error('Error loading tasks from localStorage:', error);
       setAlert({
         show: true,
-        message: 'Failed to load saved tasks! Please check browser settings.',
-        type: 'danger'
+        message: `Loaded ${loadedTasks.length} tasks from storage`,
+        type: 'success'
       });
     }
-  }, [localStorageWorks]);
+  }, []);
   
   // Save tasks to localStorage whenever tasks change
   useEffect(() => {
-    if (!localStorageWorks) return;
-    
-    try {
-      console.log('Saving tasks to localStorage:', tasks.length, tasks);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-      prevTasksRef.current = [...tasks];
-    } catch (error) {
-      console.error('Error saving tasks to localStorage:', error);
-      setAlert({
-        show: true,
-        message: 'Failed to save tasks! Please check browser settings.',
-        type: 'danger'
-      });
+    if (tasks.length > 0) {
+      saveToStorage(tasks);
     }
-  }, [tasks, localStorageWorks]);
+  }, [tasks, alert.message, history, historyIndex]);
   
-  // Force save tasks to localStorage
-  const forceSave = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-      console.log('Force saving tasks:', tasks.length, tasks);
-      setAlert({
-        show: true,
-        message: 'Tasks manually saved to localStorage successfully!',
-        type: 'success'
-      });
-    } catch (error) {
-      console.error('Manual save failed:', error);
-      setAlert({
-        show: true,
-        message: 'Manual save failed! Please check browser settings.',
-        type: 'danger'
-      });
-    }
-  };
+  // Update history whenever tasks change (except when performing undo/redo)
+  useEffect(() => {
+    // Skip if this is the initial render or if we're in the middle of an undo/redo operation
+    if (!tasks.length || alert.message?.includes('Undo') || alert.message?.includes('Redo')) return;
+    
+    // Create new history by taking everything up to current index and adding new state
+    const newHistory = [...history.slice(0, historyIndex + 1), [...tasks]];
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [tasks]);
 
-  // Check localStorage content
-  const checkStorage = () => {
-    try {
-      const savedTasks = localStorage.getItem(STORAGE_KEY);
-      const otherTasks = localStorage.getItem('tasks'); // Check if tasks were saved under the old key
-      
-      console.log('Current localStorage content:', {
-        [STORAGE_KEY]: savedTasks,
-        'tasks': otherTasks
-      });
-      
-      // Check all keys in localStorage
-      console.log('All localStorage keys:');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        console.log(`- ${key}: ${localStorage.getItem(key).substring(0, 50)}...`);
-      }
-      
-      let message;
-      if (savedTasks) {
-        const tasks = JSON.parse(savedTasks);
-        message = `Found ${tasks.length} tasks in storage using key "${STORAGE_KEY}"`;
-      } else if (otherTasks) {
-        const tasks = JSON.parse(otherTasks);
-        message = `Found ${tasks.length} tasks in storage using old key "tasks". Click Force Save to migrate.`;
-      } else {
-        message = 'No tasks found in any storage keys';
-      }
+  // Handle undo action
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      const previousState = history[newIndex];
+      dispatch({ type: 'LOAD_TASKS', payload: previousState });
       
       setAlert({
         show: true,
-        message,
+        message: 'Undo successful! ⏪',
         type: 'info'
       });
-    } catch (error) {
-      console.error('Error checking localStorage:', error);
+    } else {
       setAlert({
         show: true,
-        message: `Error checking storage: ${error.message}`,
-        type: 'danger'
-      });
-    }
-  };
-
-  // Clear all tasks from both localStorage and state
-  const clearAllTasks = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('tasks'); // Clear old key too
-      dispatch({ type: 'LOAD_TASKS', payload: [] });
-      setAlert({
-        show: true,
-        message: 'All tasks cleared from storage',
+        message: 'Nothing to undo! 🚫',
         type: 'warning'
       });
-    } catch (error) {
-      console.error('Error clearing tasks:', error);
     }
-  };
+  }, [history, historyIndex]);
 
-  // Custom dispatch to track actions
-  const enhancedDispatch = (action) => {
-    switch (action.type) {
-      case 'ADD_TASK':
-        setAlert({
-          show: true,
-          message: 'Task added successfully! 🎉',
-          type: 'success'
-        });
-        break;
-      case 'DELETE_TASK':
-        setAlert({
-          show: true,
-          message: 'Task deleted successfully! 🗑️',
-          type: 'danger'
-        });
-        break;
-      case 'UPDATE_TASK':
-        setAlert({
-          show: true,
-          message: 'Task updated successfully! ✏️',
-          type: 'info'
-        });
-        break;
-      case 'TOGGLE_COMPLETE':
-        const task = tasks.find(t => t.id === action.payload);
-        setAlert({
-          show: true,
-          message: task && !task.completed 
-            ? 'Task marked as complete! ✅' 
-            : 'Task marked as incomplete ⏳',
-          type: 'success'
-        });
-        break;
-      default:
-        // No alert for other actions
-        break;
+  // Handle redo action
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      const nextState = history[newIndex];
+      dispatch({ type: 'LOAD_TASKS', payload: nextState });
+      
+      setAlert({
+        show: true,
+        message: 'Redo successful! ⏩',
+        type: 'info'
+      });
+    } else {
+      setAlert({
+        show: true,
+        message: 'Nothing to redo! 🚫',
+        type: 'warning'
+      });
     }
-    
-    // Call the original dispatch
-    dispatch(action);
-    
-    // Force save after dispatch for critical operations
-    if (['ADD_TASK', 'DELETE_TASK', 'UPDATE_TASK'].includes(action.type) && localStorageWorks) {
-      setTimeout(() => {
-        try {
-          const updatedState = taskReducer(state, action);
-          console.log('Immediate save after action:', action.type, updatedState.tasks);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState.tasks));
-        } catch (error) {
-          console.error('Error in immediate save after dispatch:', error);
-        }
-      }, 0);
-    }
-  };
+  }, [history, historyIndex]);
   
   // Auto hide alerts after 3 seconds
   useEffect(() => {
@@ -234,7 +140,6 @@ const TaskManager = () => {
       const timer = setTimeout(() => {
         setAlert(currentAlert => ({ ...currentAlert, show: false }));
       }, 3000);
-      
       return () => clearTimeout(timer);
     }
   }, [alert.show]);
@@ -251,53 +156,50 @@ const TaskManager = () => {
         </div>
       )}
       
+      {/* App header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="text-center">Task Manager App 🚀</h1>
-        <div>
+        <div className="d-flex">
           <button 
             className={`btn ${darkMode ? 'btn-light' : 'btn-dark'} me-2`}
             onClick={toggleTheme}
           >
             {darkMode ? '☀️ Light' : '🌙 Dark'} Mode
           </button>
-          
-          {/* Debug buttons for localStorage */}
           <div className="btn-group">
-            <button 
-              className="btn btn-sm btn-info me-1" 
-              onClick={forceSave} 
-              title="Force save all tasks to localStorage"
+            <button
+              className={`btn btn-outline-secondary me-1 ${historyIndex <= 0 ? 'disabled' : ''}`}
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+              title="Undo the last action"
             >
-              💾 Save
+              ⏪ Undo
             </button>
-            <button 
-              className="btn btn-sm btn-secondary me-1" 
-              onClick={checkStorage}
-              title="Check what's currently in localStorage"
+            <button
+              className={`btn btn-outline-secondary ${historyIndex >= history.length - 1 ? 'disabled' : ''}`}
+              onClick={handleRedo}
+              disabled={historyIndex >= history.length - 1}
+              title="Redo the previously undone action"
             >
-              🔍 Check
-            </button>
-            <button 
-              className="btn btn-sm btn-danger" 
-              onClick={() => {
-                if (window.confirm('Are you sure you want to clear all tasks?')) {
-                  clearAllTasks();
-                }
-              }}
-              title="Clear all tasks from storage"
-            >
-              🧹 Clear
+              ⏩ Redo
             </button>
           </div>
         </div>
       </div>
       
+      {/* Main content */}
       <div className="row">
         {/* Left column - Task Form */}
         <div className="col-md-6 mb-4 mb-md-0">
           <div className="sticky-top pt-2">
             <h3>Create Task</h3>
-            <TaskForm dispatch={enhancedDispatch} darkMode={darkMode} />
+            <TaskForm dispatch={dispatch} darkMode={darkMode} />
+            <div className="mt-3">
+              <p className="text-muted small">
+                <strong>Keyboard Shortcuts:</strong> You can use the undo and redo buttons above 
+                or press <kbd>Ctrl+Z</kbd> for undo and <kbd>Ctrl+Y</kbd> for redo.
+              </p>
+            </div>
           </div>
         </div>
         
@@ -309,24 +211,29 @@ const TaskManager = () => {
           </div>
           
           <div style={{ height: '70vh', overflowY: 'auto' }} className="pe-2">
-            <TaskList 
-              tasks={tasks} 
-              filter={filter} 
-              dispatch={enhancedDispatch} 
-              darkMode={darkMode} 
-            />
+            <TaskList tasks={tasks} filter={filter} dispatch={dispatch} darkMode={darkMode} />
           </div>
         </div>
       </div>
-      
-      {!localStorageWorks && (
-        <div className="alert alert-warning mt-3">
-          <strong>Warning:</strong> LocalStorage is not available in your browser. 
-          Task persistence between sessions won't work. Please check your browser privacy settings.
-        </div>
-      )}
     </div>
   );
 };
+
+// Add keyboard event listeners for undo/redo
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    // Ctrl+Z for Undo
+    if (e.ctrlKey && e.key === 'z') {
+      document.querySelector('[title="Undo the last action"]')?.click();
+      e.preventDefault();
+    }
+    
+    // Ctrl+Y for Redo
+    if (e.ctrlKey && e.key === 'y') {
+      document.querySelector('[title="Redo the previously undone action"]')?.click();
+      e.preventDefault();
+    }
+  });
+}
 
 export default TaskManager;
