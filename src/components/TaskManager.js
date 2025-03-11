@@ -144,6 +144,11 @@ const TaskManager = () => {
     }
   }, [alert.show]);
 
+  // Set document title
+  useEffect(() => {
+    document.title = "Task Manager App";
+  }, []);
+
   return (
     <div className={`container-fluid mt-4 ${darkMode ? 'text-light' : ''}`}>
       {/* Alert notification */}
