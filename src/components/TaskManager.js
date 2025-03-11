@@ -77,8 +77,8 @@ const TaskManager = () => {
     if (tasks.length > 0) {
       saveToStorage(tasks);
     }
-  }, [tasks, alert.message, history, historyIndex]);
-  
+  }, [tasks, alert.message, history, historyIndex]); // Ensure all dependencies are included
+
   // Update history whenever tasks change (except when performing undo/redo)
   useEffect(() => {
     // Skip if this is the initial render or if we're in the middle of an undo/redo operation
@@ -88,7 +88,7 @@ const TaskManager = () => {
     const newHistory = [...history.slice(0, historyIndex + 1), [...tasks]];
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
-  }, [tasks]);
+  }, [tasks, alert.message, history, historyIndex]); // Ensure all dependencies are included
 
   // Handle undo action
   const handleUndo = useCallback(() => {

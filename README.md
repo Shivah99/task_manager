@@ -36,12 +36,12 @@ task-manager-app/
 │
 ├── public/                 # Static files
 │   ├── index.html          # Main HTML file
-│   └── ...existing files...
+│   └── ...existing code...
 │
 ├── src/                    # Source files
 │   ├── components/         # React components
 │   │   ├── TaskManager.js  # Main component
-│   │   └── ...existing files...
+│   │   └── ...existing code...
 │   ├── context/            # Context providers
 │   │   └── ThemeContext.js # Theme context
 │   ├── reducers/           # Reducers for state management
@@ -56,6 +56,17 @@ task-manager-app/
 ## Keyboard Shortcuts
 - **Undo**: Press `Ctrl+Z` to undo the last action.
 - **Redo**: Press `Ctrl+Y` to redo the previously undone action.
+
+## Deployment with Netlify
+1. Create a new repository on GitHub and push your project to the repository.
+2. Go to [Netlify](https://www.netlify.com/) and sign up or log in.
+3. Click on "New site from Git" and connect your GitHub account.
+4. Select the repository you just created.
+5. Configure the build settings:
+   - **Build Command**: `npm run build`
+   - **Publish Directory**: `build`
+6. Click on "Deploy site" and wait for the deployment to complete.
+7. Your site will be live on a Netlify subdomain. You can customize the domain in the site settings.
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
