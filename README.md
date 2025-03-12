@@ -1,4 +1,9 @@
 # Task Manager App
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 
 ## Overview
 The Task Manager App is a simple React application that allows users to manage their tasks efficiently with features such as task creation, filtering, and undo/redo functionality.
@@ -15,11 +20,6 @@ This app demonstrates effective use of React Hooks for building a performant tas
 - **useMemo**: For optimizing expensive calculations
 - **useCallback**: For preventing unnecessary re-renders
 - **useRef**: For persistent references
-
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone
 
 ## Features
 - **Task Creation**: Add new tasks with ease.
@@ -100,6 +100,13 @@ The project is deployed on Netlify. You can view the live demo [Task Manager](ht
 5. **Deploy the site:**
    - Click on "Deploy site" and wait for the deployment to complete.
    - Your site will be live on a Netlify subdomain. You can customize the domain in the site settings.
+
+## References and Documentation
+For more detailed information about the project, refer to the following documentation:
+
+- [Feature Documentation](./documents/FEATURES.md) - Detailed descriptions of all features and their usage
+- [Technologies Used](./documents/TECHNOLOGIES.md) - Complete list of technologies, libraries and tools used
+- [GitHub Repository](https://github.com/your-repo/task-manager-app) - Source code repository
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
