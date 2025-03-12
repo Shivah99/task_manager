@@ -22,8 +22,7 @@ const SubTaskItem = ({ subtask, taskId, dispatch }) => {
     </div>
   );
 };
-
-const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
+const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -108,20 +107,46 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
     dispatch({ type: 'TOGGLE_TASK_EXPAND', payload: task.id });
   };
 
+  // Sort subtasks - active first, completed at the bottom - with added animation
+  const sortedSubTasks = useMemo(() => {
+    if (!task.subTasks || task.subTasks.length === 0) return [];
+    
+    return [...task.subTasks].sort((a, b) => {
+      // If one is completed and the other isn't, the completed one goes to the bottom
+      if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
+      return 0;
+    });
+  }, [task.subTasks]);
+  
+  // Handle clicking the entire task header to toggle expand
+  const handleHeaderClick = (e) => {
+    // Don't expand if clicking on checkbox or action buttons
+    if (e.target.type === 'checkbox' || e.target.closest('.btn-group') || e.target.closest('button')) {
+      return;
+    }
+    
+    handleToggleExpand();
+  };
+
   if (task.isSecret && !showSecret) {
     return null;
   }
 
   return (
     <div 
-      className={`card mb-3 ${darkMode ? 'bg-dark border-secondary' : ''}`}
+      className={`card mb-3 ${darkMode ? 'bg-dark border-secondary' : ''} ${isSelected ? 'border border-primary border-2' : ''}`}
       style={{ 
         backgroundColor: darkMode ? '#333' : task.backgroundColor || '#ffffff',
         borderLeft: `5px solid ${task.completed ? '#28a745' : task.isSecret ? '#ffc107' : '#007bff'}`,
         transition: 'all 0.3s ease'
       }}
     >
-      <div className="card-header d-flex justify-content-between align-items-center">
+      <div 
+        className="card-header d-flex justify-content-between align-items-center"
+        onClick={handleHeaderClick}
+        style={{ cursor: 'pointer' }}
+      >
         {isEditing ? (
           <div className="input-group">
             <input
@@ -130,31 +155,47 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               autoFocus
+              onClick={(e) => e.stopPropagation()} // Prevent header click handler
             />
-            <button className="btn btn-success" onClick={handleSave}>
+            <button 
+              className="btn btn-success" 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent header click handler
+                handleSave();
+              }}
+            >
               💾 Save
             </button>
-            <button className="btn btn-secondary" onClick={() => setIsEditing(false)}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent header click handler
+                setIsEditing(false);
+              }}
+            >
               ❌ Cancel
             </button>
           </div>
         ) : (
           <>
             <div className="d-flex align-items-center flex-grow-1">
-              <div className="form-check me-2">
+              <div className="form-check me-2" onClick={(e) => e.stopPropagation()}>
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  checked={task.completed}
-                  onChange={handleComplete}
-                  id={`task-${task.id}`}
-                  style={{ width: '1.3em', height: '1.3em', cursor: 'pointer' }}
+                  checked={isSelected}
+                  onChange={() => onSelect && onSelect(task.id)}
+                  id={`select-task-${task.id}`}
+                  style={{ 
+                    width: '1.3em', 
+                    height: '1.3em',
+                    cursor: 'pointer'
+                  }}
+                  title="Select for batch operations"
                 />
               </div>
               <h5 
                 className={`mb-0 ${task.completed ? 'text-decoration-line-through text-muted' : ''}`}
-                style={{cursor: 'pointer'}}
-                onClick={handleToggleExpand}
               >
                 {taskHeading} {task.isSecret && '🔒'}
                 {totalSubTasks > 0 && 
@@ -162,10 +203,56 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
                 }
               </h5>
             </div>
-            <div>
+            <div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
+              <div className="btn-group me-2">
+                <button 
+                  className="btn btn-sm btn-outline-success" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent header click handler
+                    handleComplete();
+                  }}
+                  title={task.completed ? "Mark as incomplete" : "Mark as complete"}
+                >
+                  {task.completed ? '❌' : '✔️'}
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-primary" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent header click handler
+                    setShowColorPicker(!showColorPicker);
+                  }}
+                  title="Change task color"
+                >
+                  🎨
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-secondary" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent header click handler
+                    handleEdit();
+                  }}
+                  disabled={task.completed}
+                  title="Edit task"
+                >
+                  ✏️
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-danger" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent header click handler
+                    handleDelete();
+                  }}
+                  title="Delete task"
+                >
+                  🗑️
+                </button>
+              </div>
               <button 
-                className="btn btn-sm btn-link text-decoration-none p-0 me-2" 
-                onClick={handleToggleExpand}
+                className="btn btn-sm btn-link text-decoration-none p-0" 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent header click handler
+                  handleToggleExpand();
+                }}
                 title={task.isExpanded ? "Collapse" : "Expand"}
               >
                 {task.isExpanded ? '🔼' : '🔽'}
@@ -183,9 +270,9 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
           
           <div className="mb-3">
             <h6 className="fw-bold">Subtasks</h6>
-            {task.subTasks?.length > 0 ? (
-              <div className="mb-3">
-                {task.subTasks.map(subtask => (
+            {sortedSubTasks.length > 0 ? (
+              <div className="mb-3 subtask-container">
+                {sortedSubTasks.map(subtask => (
                   <SubTaskItem 
                     key={subtask.id} 
                     subtask={subtask} 
@@ -211,50 +298,23 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
             </form>
           </div>
           
-          <div className="d-flex justify-content-between align-items-center">
-            <small className="text-muted">
+          <div className="d-flex justify-content-end align-items-center">
+            <small className="text-muted me-auto">
               🕒 Created: {formattedDate}
             </small>
             
-            <div className="btn-group">
-              <button 
-                className="btn btn-sm btn-outline-primary" 
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                title="Change task color"
-              >
-                🎨
-              </button>
-              <button 
-                className="btn btn-sm btn-outline-secondary" 
-                onClick={handleEdit}
-                disabled={task.completed}
-                title="Edit task"
-              >
-                ✏️
-              </button>
-              <button 
-                className="btn btn-sm btn-outline-danger" 
-                onClick={handleDelete}
-                title="Delete task"
-              >
-                🗑️
-              </button>
-            </div>
-          </div>
-          
-          {showColorPicker && (
-            <div className="mt-2 p-2 border rounded">
-              <div className="d-flex flex-wrap justify-content-center">
+            {showColorPicker && (
+              <div className="ms-2 border rounded p-1 d-flex flex-wrap" style={{maxWidth: '200px'}}>
                 {colorOptions.map(color => (
                   <div 
                     key={color}
                     onClick={() => handleColorChange(color)}
                     style={{
-                      width: '25px',
-                      height: '25px',
+                      width: '20px',
+                      height: '20px',
                       backgroundColor: color,
-                      margin: '5px',
-                      borderRadius: '4px',
+                      margin: '2px',
+                      borderRadius: '3px',
                       cursor: 'pointer',
                       border: '1px solid #ddd'
                     }}
@@ -262,8 +322,8 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
                   />
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

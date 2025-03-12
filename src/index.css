@@ -11,3 +11,138 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Add animation for subtask transitions */
+.subtask-container {
+  position: relative;
+}
+
+.subtask-container > div {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Ensure subtasks are clickable only on the checkbox, not the entire row */
+.subtask-container input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Responsive layout using CSS Grid and Flexbox */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.app-title {
+  margin-bottom: 0;
+}
+
+.app-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Main layout using CSS Grid */
+.task-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.task-form-container,
+.tasks-list-container {
+  min-width: 0; /* Important for preventing overflow */
+}
+
+/* Form and List Headers */
+.form-header,
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Filter area responsiveness */
+.filter-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Task scrollable area */
+.tasks-scroll-area {
+  height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Task item responsiveness */
+.card-header {
+  flex-wrap: wrap;
+}
+
+/* Media queries for different screen sizes */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .history-controls {
+    margin-top: 0.5rem;
+  }
+  
+  .task-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-header, 
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .tasks-scroll-area {
+    height: 50vh;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .btn-sm {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Enhanced visibility when the page is zoomed in */
+@media (max-width: 992px) and (min-resolution: 1.5dppx) {
+  .task-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-controls button {
+    padding: 0.5rem 1rem;
+  }
+}

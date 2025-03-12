@@ -113,8 +113,9 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       )}
       
       {filteredTasks.length === 0 ? (
-        <div className="alert alert-info">
-          No tasks found! {filter !== 'all' || hideCompleted ? 'Try changing the filter.' : 'Add your first task above.'} 🎯
+        <div className="alert alert-info text-center p-4">
+          <i className="fas fa-info-circle fa-2x mb-3"></i>
+          <p className="mb-0">No tasks found! {filter !== 'all' || hideCompleted ? 'Try changing the filter.' : 'Add your first task above.'} 🎯</p>
         </div>
       ) : (
         <div className="task-list">

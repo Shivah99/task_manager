@@ -161,17 +161,17 @@ const TaskManager = () => {
         </div>
       )}
       
-      {/* App header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="text-center">Task Manager App 🚀</h1>
-        <div className="d-flex">
+      {/* App header - Make responsive with flexbox */}
+      <div className="app-header mb-4">
+        <h1 className="text-center app-title">Task Manager App 🚀</h1>
+        <div className="app-controls">
           <button 
             className={`btn ${darkMode ? 'btn-light' : 'btn-dark'} me-2`}
             onClick={toggleTheme}
           >
             {darkMode ? '☀️ Light' : '🌙 Dark'} Mode
           </button>
-          <div className="btn-group">
+          <div className="btn-group history-controls">
             <button
               className={`btn btn-outline-secondary me-1 ${historyIndex <= 0 ? 'disabled' : ''}`}
               onClick={handleUndo}
@@ -192,12 +192,12 @@ const TaskManager = () => {
         </div>
       </div>
       
-      {/* Main content */}
-      <div className="row">
+      {/* Main content - Make responsive using grid */}
+      <div className="task-layout">
         {/* Left column - Task Form */}
-        <div className="col-md-6 mb-4 mb-md-0">
+        <div className="task-form-container">
           <div className="sticky-top pt-2">
-            <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="form-header">
               <h3>✏️ Create New Task</h3>
               <div className="form-check form-switch">
                 <input 
@@ -217,10 +217,10 @@ const TaskManager = () => {
         </div>
         
         {/* Right column - Tasks List */}
-        <div className="col-md-6">
-          <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="tasks-list-container">
+          <div className="list-header">
             <h3>Tasks List 📋</h3>
-            <div className="d-flex align-items-center">
+            <div className="filter-container">
               <div className="form-check form-switch me-3">
                 <input 
                   className="form-check-input" 
@@ -237,7 +237,7 @@ const TaskManager = () => {
             </div>
           </div>
           
-          <div style={{ height: '70vh', overflowY: 'auto' }} className="pe-2">
+          <div className="tasks-scroll-area">
             <TaskList 
               tasks={tasks} 
               filter={filter} 
