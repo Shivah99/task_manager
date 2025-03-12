@@ -1,99 +1,309 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useReducer, useEffect } from 'react';
 
-const TaskForm = ({ dispatch, darkMode }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [currentTaskId, setCurrentTaskId] = useState(null);
+// Reducer for form input history
+const historyReducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_TEXT':
+      return {
+        past: [...state.past, state.present],
+        present: action.payload,
+        future: []
+      };
+    case 'UNDO':
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1];
+      return {
+        past: state.past.slice(0, state.past.length - 1),
+        present: previous,
+        future: [state.present, ...state.future]
+      };
+    case 'REDO':
+      if (state.future.length === 0) return state;
+      const next = state.future[0];
+      return {
+        past: [...state.past, state.present],
+        present: next,
+        future: state.future.slice(1)
+      };
+    case 'RESET':
+      return {
+        past: [],
+        present: '',
+        future: []
+      };
+    default:
+      return state;
+  }
+};
 
-  // Function to add or update a task
-  const handleSubmit = useCallback(() => {
-    if (title && description) {
-      if (editMode && currentTaskId) {
-        dispatch({
-          type: 'UPDATE_TASK',
-          payload: {
-            id: currentTaskId,
-            updates: { title, description }
-          }
-        });
-        setEditMode(false);
-        setCurrentTaskId(null);
-      } else {
-        dispatch({
-          type: 'ADD_TASK',
-          payload: {
-            id: Date.now(),
-            title,
-            description,
-            completed: false
-          }
-        });
+// Draft task storage key
+const DRAFT_TASK_KEY = 'taskDraft';
+
+const TaskForm = ({ dispatch, darkMode, showSecret }) => {
+  // State for task form history (undo/redo)
+  const [inputHistory, dispatchHistory] = useReducer(historyReducer, {
+    past: [],
+    present: '',
+    future: []
+  });
+
+  const [priority, setPriority] = useState('medium');
+  const [taskColor, setTaskColor] = useState('#ffffff');
+  const [isSecret, setIsSecret] = useState(false);
+  
+  // State for subtasks
+  const [subtasks, setSubtasks] = useState([]);
+  const [newSubtask, setNewSubtask] = useState('');
+  
+  // Load draft task when component mounts
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_TASK_KEY);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        dispatchHistory({ type: 'UPDATE_TEXT', payload: draft.title || '' });
+        setPriority(draft.priority || 'medium');
+        setTaskColor(draft.backgroundColor || '#ffffff');
+        setIsSecret(draft.isSecret || false);
+        setSubtasks(draft.subtasks || []);
       }
-      setTitle('');
-      setDescription('');
+    } catch (e) {
+      console.error('Error loading draft task:', e);
     }
-  }, [title, description, editMode, currentTaskId, dispatch]);
-
-  // Cancel edit mode
-  const cancelEdit = () => {
-    setEditMode(false);
-    setCurrentTaskId(null);
-    setTitle('');
-    setDescription('');
-  };
-
-  // Set form to edit mode with task data
-  React.useEffect(() => {
-    const handleTaskEdit = (event) => {
-      if (event.detail?.task) {
-        const task = event.detail.task;
-        setTitle(task.title);
-        setDescription(task.description);
-        setEditMode(true);
-        setCurrentTaskId(task.id);
+  }, []);
+  
+  // Auto save draft task when form changes
+  useEffect(() => {
+    const saveDraft = () => {
+      try {
+        const draft = {
+          title: inputHistory.present,
+          priority,
+          backgroundColor: taskColor,
+          isSecret,
+          subtasks
+        };
+        localStorage.setItem(DRAFT_TASK_KEY, JSON.stringify(draft));
+      } catch (e) {
+        console.error('Error saving draft task:', e);
       }
     };
+    
+    if (inputHistory.present || subtasks.length > 0) {
+      saveDraft();
+    }
+    
+    // Set up autosave timer
+    const timer = setInterval(saveDraft, 5000); // Save every 5 seconds
+    return () => clearInterval(timer);
+  }, [inputHistory.present, priority, taskColor, isSecret, subtasks]);
 
-    window.addEventListener('editTask', handleTaskEdit);
-    return () => window.removeEventListener('editTask', handleTaskEdit);
-  }, []);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (inputHistory.present.trim()) {
+      // Add the task with all properties
+      dispatch({
+        type: 'ADD_TASK',
+        payload: {
+          id: Date.now().toString(),
+          title: inputHistory.present.trim(),
+          completed: false,
+          createdAt: new Date().toISOString(),
+          priority: priority,
+          backgroundColor: taskColor,
+          isSecret: isSecret,
+          subTasks: subtasks.map(st => ({
+            ...st,
+            id: st.id || Date.now().toString() + Math.random().toString(36).substr(2, 9)
+          }))
+        }
+      });
+      
+      // Reset form
+      dispatchHistory({ type: 'RESET' });
+      setPriority('medium');
+      setTaskColor('#ffffff');
+      setIsSecret(false);
+      setSubtasks([]);
+      setNewSubtask('');
+      
+      // Clear draft
+      localStorage.removeItem(DRAFT_TASK_KEY);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    dispatchHistory({ type: 'UPDATE_TEXT', payload: e.target.value });
+  };
+
+  const handleUndo = () => {
+    dispatchHistory({ type: 'UNDO' });
+  };
+
+  const handleRedo = () => {
+    dispatchHistory({ type: 'REDO' });
+  };
+  
+  const handleAddSubtask = (e) => {
+    e.preventDefault();
+    if (newSubtask.trim()) {
+      setSubtasks([
+        ...subtasks,
+        {
+          id: Date.now().toString(),
+          title: newSubtask.trim(),
+          completed: false
+        }
+      ]);
+      setNewSubtask('');
+    }
+  };
+  
+  const handleToggleSubtask = (id) => {
+    setSubtasks(subtasks.map(st => 
+      st.id === id ? { ...st, completed: !st.completed } : st
+    ));
+  };
+  
+  const handleRemoveSubtask = (id) => {
+    setSubtasks(subtasks.filter(st => st.id !== id));
+  };
+  
+  // Sort subtasks - active first, completed at the bottom
+  const sortedSubtasks = [...subtasks].sort((a, b) => {
+    if (a.completed && !b.completed) return 1;
+    if (!a.completed && b.completed) return -1;
+    return 0;
+  });
 
   return (
-    <div className={`card p-4 shadow ${darkMode ? 'bg-dark text-light border-secondary' : 'bg-light'}`}>
-      <div className="form-group">
-        <label htmlFor="title">Task Title</label>
-        <input
-          type="text"
-          className="form-control"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter a task title"
-        />
-      </div>
-      <div className="form-group mt-3">
-        <label htmlFor="description">Task Description</label>
-        <textarea
-          className="form-control"
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter task details"
-          rows="5"
-        ></textarea>
-      </div>
-      <div className="mt-3">
-        <button className="btn btn-primary btn-lg w-100" onClick={handleSubmit}>
-          {editMode ? 'Update Task 🔄' : 'Add Task ✨'}
-        </button>
-        {editMode && (
-          <button className="btn btn-secondary w-100 mt-2" onClick={cancelEdit}>
-            Cancel Edit ❌
+    <form onSubmit={handleSubmit} className={`card ${darkMode ? 'bg-dark border-secondary' : 'bg-light'} p-3`}>
+      <h4 className="mb-3 fw-bold">✨ New Task</h4>
+      
+      <div className="mb-3">
+        <div className="input-group">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="What needs to be done?"
+            value={inputHistory.present}
+            onChange={handleInputChange}
+            autoFocus
+          />
+          <button 
+            type="button" 
+            className="btn btn-outline-secondary" 
+            onClick={handleUndo}
+            disabled={inputHistory.past.length === 0}
+            title="Undo text edit"
+          >
+            ⏪
           </button>
+          <button 
+            type="button" 
+            className="btn btn-outline-secondary" 
+            onClick={handleRedo}
+            disabled={inputHistory.future.length === 0}
+            title="Redo text edit"
+          >
+            ⏩
+          </button>
+        </div>
+      </div>
+      
+      {/* Subtasks section */}
+      <div className="mb-3">
+        <h6 className="fw-bold mb-2">📋 Subtasks</h6>
+        
+        {sortedSubtasks.length > 0 && (
+          <div className="mb-2">
+            {sortedSubtasks.map(subtask => (
+              <div key={subtask.id} className="d-flex align-items-center mb-1">
+                <div className="form-check me-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={subtask.completed}
+                    onChange={() => handleToggleSubtask(subtask.id)}
+                    style={{ width: '1.1em', height: '1.1em', cursor: 'pointer' }}
+                  />
+                </div>
+                <span className={`flex-grow-1 ${subtask.completed ? 'text-decoration-line-through text-muted' : ''}`}>
+                  {subtask.title}
+                </span>
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-link text-danger p-0" 
+                  onClick={() => handleRemoveSubtask(subtask.id)}
+                >
+                  ❌
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="input-group input-group-sm">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Add a subtask..."
+            value={newSubtask}
+            onChange={(e) => setNewSubtask(e.target.value)}
+          />
+          <button 
+            type="button" 
+            className="btn btn-outline-secondary"
+            onClick={handleAddSubtask}
+          >
+            ➕
+          </button>
+        </div>
+        
+        {subtasks.length > 0 && (
+          <div className="text-muted small mt-1">
+            <em>Auto-saving draft with {subtasks.length} subtasks...</em>
+          </div>
         )}
       </div>
-    </div>
+
+      <div className="row mb-3">
+        <div className="col-md-6 mb-2 mb-md-0">
+          <div className="d-flex align-items-center">
+            <label className="form-label mb-0 me-2 fw-bold">🚩 Priority:</label>
+            <select 
+              className="form-select" 
+              value={priority} 
+              onChange={(e) => setPriority(e.target.value)}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="form-check">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="secretTaskCheck"
+              checked={isSecret}
+              onChange={() => setIsSecret(!isSecret)}
+            />
+            <label className="form-check-label" htmlFor="secretTaskCheck">
+              🔒 Create as secret task
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" className="btn btn-primary w-100">
+        ➕ Add Task
+      </button>
+    </form>
   );
 };
 

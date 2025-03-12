@@ -32,7 +32,7 @@ const loadFromStorage = () => {
 const TaskManager = () => {
   // Use reducer for task state management
   const [state, dispatch] = useReducer(taskReducer, initialState);
-  const { tasks, filter } = state;
+  const { tasks, filter, hideCompleted, showSecret } = state;
   
   // State for alerts
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
@@ -197,14 +197,22 @@ const TaskManager = () => {
         {/* Left column - Task Form */}
         <div className="col-md-6 mb-4 mb-md-0">
           <div className="sticky-top pt-2">
-            <h3>Create Task</h3>
-            <TaskForm dispatch={dispatch} darkMode={darkMode} />
-            <div className="mt-3">
-              <p className="text-muted small">
-                <strong>Keyboard Shortcuts:</strong> You can use the undo and redo buttons above 
-                or press <kbd>Ctrl+Z</kbd> for undo and <kbd>Ctrl+Y</kbd> for redo.
-              </p>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h3>✏️ Create New Task</h3>
+              <div className="form-check form-switch">
+                <input 
+                  className="form-check-input" 
+                  type="checkbox" 
+                  id="secretTasksSwitch" 
+                  checked={showSecret}
+                  onChange={() => dispatch({ type: 'TOGGLE_SECRET_TASKS' })} 
+                />
+                <label className="form-check-label" htmlFor="secretTasksSwitch">
+                  🔒 Secret Tasks
+                </label>
+              </div>
             </div>
+            <TaskForm dispatch={dispatch} darkMode={darkMode} showSecret={showSecret} />
           </div>
         </div>
         
@@ -212,11 +220,32 @@ const TaskManager = () => {
         <div className="col-md-6">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h3>Tasks List 📋</h3>
-            <TaskFilter filter={filter} dispatch={dispatch} darkMode={darkMode} />
+            <div className="d-flex align-items-center">
+              <div className="form-check form-switch me-3">
+                <input 
+                  className="form-check-input" 
+                  type="checkbox" 
+                  id="hideCompletedSwitch" 
+                  checked={hideCompleted}
+                  onChange={() => dispatch({ type: 'TOGGLE_HIDE_COMPLETED' })} 
+                />
+                <label className="form-check-label" htmlFor="hideCompletedSwitch">
+                  Hide Completed
+                </label>
+              </div>
+              <TaskFilter filter={filter} dispatch={dispatch} darkMode={darkMode} />
+            </div>
           </div>
           
           <div style={{ height: '70vh', overflowY: 'auto' }} className="pe-2">
-            <TaskList tasks={tasks} filter={filter} dispatch={dispatch} darkMode={darkMode} />
+            <TaskList 
+              tasks={tasks} 
+              filter={filter} 
+              hideCompleted={hideCompleted}
+              showSecret={showSecret}
+              dispatch={dispatch} 
+              darkMode={darkMode} 
+            />
           </div>
         </div>
       </div>

@@ -1,29 +1,35 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 
 const TaskFilter = ({ filter, dispatch, darkMode }) => {
-  const setFilter = useCallback((filterValue) => {
-    dispatch({ type: 'SET_FILTER', payload: filterValue });
-  }, [dispatch]);
+  const handleFilterChange = (newFilter) => {
+    dispatch({ type: 'SET_FILTER', payload: newFilter });
+  };
 
   return (
     <div className="btn-group">
-      <button 
-        className={`btn ${filter === 'all' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`} 
-        onClick={() => setFilter('all')}
-      >
-        All
-      </button>
-      <button 
-        className={`btn ${filter === 'active' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
-        onClick={() => setFilter('active')}
+      <button
+        className={`btn btn-sm ${filter === 'active' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
+        onClick={() => handleFilterChange('active')}
       >
         Active
       </button>
-      <button 
-        className={`btn ${filter === 'completed' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
-        onClick={() => setFilter('completed')}
+      <button
+        className={`btn btn-sm ${filter === 'completed' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
+        onClick={() => handleFilterChange('completed')}
       >
         Completed
+      </button>
+      <button
+        className={`btn btn-sm ${filter === 'hidden' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
+        onClick={() => handleFilterChange('hidden')}
+      >
+        Hidden
+      </button>
+      <button
+        className={`btn btn-sm ${filter === 'all' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
+        onClick={() => handleFilterChange('all')}
+      >
+        ALL
       </button>
     </div>
   );
