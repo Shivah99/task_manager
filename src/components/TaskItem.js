@@ -23,7 +23,7 @@ const SubTaskItem = ({ subtask, taskId, dispatch }) => {
   );
 };
 
-const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }) => {
+const TaskItem = ({ task, dispatch, darkMode, showSecret }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -108,35 +108,13 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
     dispatch({ type: 'TOGGLE_TASK_EXPAND', payload: task.id });
   };
 
-  // Sort subtasks - active first, completed at the bottom
-  const sortedSubTasks = useMemo(() => {
-    if (!task.subTasks || task.subTasks.length === 0) return [];
-    
-    return [...task.subTasks].sort((a, b) => {
-      // If one is completed and the other isn't, the completed one goes to the bottom
-      if (a.completed && !b.completed) return 1;
-      if (!a.completed && b.completed) return -1;
-      return 0;
-    });
-  }, [task.subTasks]);
-
-  // Priority styling
-  const getPriorityBadgeClass = (priority) => {
-    switch(priority) {
-      case 'high': return 'bg-danger';
-      case 'low': return 'bg-info';
-      case 'hidden': return 'bg-secondary';
-      default: return 'bg-primary';
-    }
-  };
-
   if (task.isSecret && !showSecret) {
     return null;
   }
 
   return (
     <div 
-      className={`card mb-3 ${darkMode ? 'bg-dark border-secondary' : ''} ${isSelected ? 'border border-primary border-2' : ''}`}
+      className={`card mb-3 ${darkMode ? 'bg-dark border-secondary' : ''}`}
       style={{ 
         backgroundColor: darkMode ? '#333' : task.backgroundColor || '#ffffff',
         borderLeft: `5px solid ${task.completed ? '#28a745' : task.isSecret ? '#ffc107' : '#007bff'}`,
@@ -167,17 +145,10 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  checked={isSelected}
-                  onChange={() => onSelect && onSelect(task.id)}
-                  id={`select-task-${task.id}`}
-                  style={{ 
-                    width: '1.3em', 
-                    height: '1.3em',
-                    cursor: 'pointer',
-                    backgroundColor: isSelected ? '#0d6efd' : '',
-                    borderColor: isSelected ? '#0d6efd' : ''
-                  }}
-                  title="Select task"
+                  checked={task.completed}
+                  onChange={handleComplete}
+                  id={`task-${task.id}`}
+                  style={{ width: '1.3em', height: '1.3em', cursor: 'pointer' }}
                 />
               </div>
               <h5 
@@ -186,50 +157,14 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
                 onClick={handleToggleExpand}
               >
                 {taskHeading} {task.isSecret && '🔒'}
-                {task.priority && (
-                  <span className={`badge ms-2 ${getPriorityBadgeClass(task.priority)}`} style={{fontSize: '0.6em'}}>
-                    {task.priority}
-                  </span>
-                )}
                 {totalSubTasks > 0 && 
                   <small className="ms-2 text-muted">({completedSubTasks}/{totalSubTasks})</small>
                 }
               </h5>
             </div>
-            <div className="d-flex align-items-center">
-              <div className="btn-group me-2">
-                <button 
-                  className="btn btn-sm btn-outline-success" 
-                  onClick={handleComplete}
-                  title={task.completed ? "Mark as incomplete" : "Mark as complete"}
-                >
-                  {task.completed ? '❌' : '✔️'}
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-primary" 
-                  onClick={() => setShowColorPicker(!showColorPicker)}
-                  title="Change task color"
-                >
-                  🎨
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-secondary" 
-                  onClick={handleEdit}
-                  disabled={task.completed}
-                  title="Edit task"
-                >
-                  ✏️
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-danger" 
-                  onClick={handleDelete}
-                  title="Delete task"
-                >
-                  🗑️
-                </button>
-              </div>
+            <div>
               <button 
-                className="btn btn-sm btn-link text-decoration-none p-0" 
+                className="btn btn-sm btn-link text-decoration-none p-0 me-2" 
                 onClick={handleToggleExpand}
                 title={task.isExpanded ? "Collapse" : "Expand"}
               >
@@ -248,9 +183,9 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
           
           <div className="mb-3">
             <h6 className="fw-bold">Subtasks</h6>
-            {sortedSubTasks.length > 0 ? (
+            {task.subTasks?.length > 0 ? (
               <div className="mb-3">
-                {sortedSubTasks.map(subtask => (
+                {task.subTasks.map(subtask => (
                   <SubTaskItem 
                     key={subtask.id} 
                     subtask={subtask} 
@@ -276,23 +211,50 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
             </form>
           </div>
           
-          <div className="d-flex justify-content-end align-items-center">
-            <small className="text-muted me-auto">
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="text-muted">
               🕒 Created: {formattedDate}
             </small>
             
-            {showColorPicker && (
-              <div className="ms-2 border rounded p-1 d-flex flex-wrap" style={{maxWidth: '200px'}}>
+            <div className="btn-group">
+              <button 
+                className="btn btn-sm btn-outline-primary" 
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                title="Change task color"
+              >
+                🎨
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-secondary" 
+                onClick={handleEdit}
+                disabled={task.completed}
+                title="Edit task"
+              >
+                ✏️
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-danger" 
+                onClick={handleDelete}
+                title="Delete task"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+          
+          {showColorPicker && (
+            <div className="mt-2 p-2 border rounded">
+              <div className="d-flex flex-wrap justify-content-center">
                 {colorOptions.map(color => (
                   <div 
                     key={color}
                     onClick={() => handleColorChange(color)}
                     style={{
-                      width: '20px',
-                      height: '20px',
+                      width: '25px',
+                      height: '25px',
                       backgroundColor: color,
-                      margin: '2px',
-                      borderRadius: '3px',
+                      margin: '5px',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       border: '1px solid #ddd'
                     }}
@@ -300,8 +262,8 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
                   />
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
