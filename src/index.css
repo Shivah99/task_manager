@@ -88,6 +88,13 @@ code {
   flex-wrap: wrap;
 }
 
+/* Hover effects for color picker */
+.color-picker div:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+  border: 2px solid #000;
+}
+
 /* Media queries for different screen sizes */
 @media (max-width: 768px) {
   .app-header {

@@ -116,6 +116,16 @@ export const taskReducer = (state, action) => {
         )
       };
 
+    case 'TOGGLE_TASK_EXPAND':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload
+            ? { ...task, isExpanded: !task.isExpanded } // Toggle the isExpanded property
+            : task
+        )
+      };
+
     default:
       return state;
   }

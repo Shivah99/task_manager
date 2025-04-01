@@ -51,8 +51,7 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
   
   // Available colors for task backgrounds
   const colorOptions = [
-    '#ffffff', '#f8d7da', '#d1e7dd', '#cfe2ff', '#fff3cd', 
-    '#e2e3e5', '#d7f5fa', '#e8daef', '#fadbd8'
+    '#f8d7da', '#FCBB6D', '#D8737F', '#AB6C82', '#685D79', '#475C7A' // Restricted color palette
   ];
 
   const handleComplete = () => {
@@ -321,7 +320,7 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
             </small>
             
             {showColorPicker && (
-              <div className="ms-2 border rounded p-1 d-flex flex-wrap" style={{maxWidth: '200px'}}>
+              <div className="ms-2 border rounded p-1 d-flex flex-wrap" style={{ maxWidth: '200px' }}>
                 {colorOptions.map(color => (
                   <div 
                     key={color}

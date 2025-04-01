@@ -54,6 +54,11 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState('');
   
+  // Restricted color palette
+  const colorOptions = [
+    '#f8d7da', '#FCBB6D', '#D8737F', '#AB6C82', '#685D79', '#475C7A' // Restricted color palette
+  ];
+
   // Load draft task when component mounts
   useEffect(() => {
     try {
@@ -258,6 +263,29 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
           >
             ➕
           </button>
+        </div>
+      </div>
+
+      {/* Task color section */}
+      <div className="mb-3">
+        <h6 className="fw-bold mb-2">🎨 Task Background Theme</h6>
+        <div className="d-flex flex-wrap">
+          {colorOptions.map(color => (
+            <div 
+              key={color}
+              onClick={() => setTaskColor(color)}
+              style={{
+                width: '30px',
+                height: '30px',
+                backgroundColor: color,
+                margin: '5px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                border: taskColor === color ? '3px solid #000' : '1px solid #ddd'
+              }}
+              title={`Set to ${color}`}
+            />
+          ))}
         </div>
       </div>
 
