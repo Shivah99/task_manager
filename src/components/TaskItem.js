@@ -28,6 +28,10 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [newSubTask, setNewSubTask] = useState('');
 
+  const handleRemoveSecret = () => {
+    dispatch({ type: 'REMOVE_SECRET', payload: task.id });
+  };
+
   // Format the creation date for display - using useMemo to prevent recalculation on every render
   const formattedDate = useMemo(() => {
     // Use a default date (task creation) if createdAt is not available
@@ -137,8 +141,9 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
     <div 
       className={`card mb-3 ${darkMode ? 'bg-dark border-secondary' : ''} ${isSelected ? 'border border-primary border-2' : ''}`}
       style={{ 
-        backgroundColor: darkMode ? '#333' : task.backgroundColor || '#ffffff',
+        backgroundColor: darkMode ? '#616161' : task.backgroundColor || '#ffffff',
         borderLeft: `5px solid ${task.completed ? '#28a745' : task.isSecret ? '#ffc107' : '#007bff'}`,
+        color: darkMode ? '#ffffff' : '#000000', // Ensure text is visible
         transition: 'all 0.3s ease'
       }}
     >
@@ -246,6 +251,18 @@ const TaskItem = ({ task, dispatch, darkMode, showSecret, isSelected, onSelect }
                 >
                   🗑️
                 </button>
+                {task.isSecret && (
+                  <button 
+                    className="btn btn-sm btn-outline-warning"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent header click handler
+                      handleRemoveSecret();
+                    }}
+                    title="Remove from Secret"
+                  >
+                    🔓
+                  </button>
+                )}
               </div>
               <button 
                 className="btn btn-sm btn-link text-decoration-none p-0" 

@@ -150,7 +150,9 @@ const TaskManager = () => {
   }, []);
 
   return (
-    <div className={`container-fluid mt-4 ${darkMode ? 'text-light bg-dark' : ''}`}>
+    <div className={`container-fluid mt-4 ${darkMode ? 'text-light bg-dark' : ''}`}
+      style={{ backgroundColor: darkMode ? '#616161' : '', color: darkMode ? '#ffffff' : '' }}
+    >
       {/* Alert notification */}
       {alert.show && (
         <div className={`alert alert-${alert.type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`} 

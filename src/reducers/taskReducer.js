@@ -12,9 +12,10 @@ export const taskReducer = (state, action) => {
         tasks: [...state.tasks, {
           ...action.payload,
           createdAt: action.payload.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(), // Set updatedAt when task is created
           backgroundColor: action.payload.backgroundColor || '#ffffff',
           subTasks: action.payload.subTasks || [],
-          isSecret: action.payload.isSecret || false, // Keep secret tasks functionality
+          isSecret: action.payload.isSecret || false,
           isExpanded: false // Default collapsed state
         }]
       };
@@ -35,7 +36,9 @@ export const taskReducer = (state, action) => {
       return {
         ...state,
         tasks: state.tasks.map(task =>
-          task.id === action.payload ? { ...task, completed: !task.completed } : task
+          task.id === action.payload
+            ? { ...task, completed: !task.completed, updatedAt: new Date().toISOString() } // Update updatedAt
+            : task
         )
       };
 
@@ -55,6 +58,62 @@ export const taskReducer = (state, action) => {
           isSecret: task.isSecret || false,
           isExpanded: task.isExpanded || false
         }))
+      };
+
+    case 'REMOVE_SECRET':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload
+            ? { ...task, isSecret: false, updatedAt: new Date().toISOString() } // Update updatedAt
+            : task
+        )
+      };
+
+    case 'UPDATE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload.id
+            ? { ...task, ...action.payload.updates, updatedAt: new Date().toISOString() } // Update updatedAt
+            : task
+        )
+      };
+
+    case 'ADD_SUBTASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload.taskId
+            ? {
+                ...task,
+                subTasks: [...(task.subTasks || []), {
+                  id: Date.now().toString(),
+                  title: action.payload.title,
+                  completed: false
+                }],
+                updatedAt: new Date().toISOString() // Update updatedAt
+              }
+            : task
+        )
+      };
+
+    case 'TOGGLE_SUBTASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload.taskId
+            ? {
+                ...task,
+                subTasks: task.subTasks?.map(subtask =>
+                  subtask.id === action.payload.subtaskId
+                    ? { ...subtask, completed: !subtask.completed }
+                    : subtask
+                ),
+                updatedAt: new Date().toISOString() // Update updatedAt
+              }
+            : task
+        )
       };
 
     default:

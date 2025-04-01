@@ -19,7 +19,17 @@ const TaskList = ({ tasks, filter, showSecret, dispatch, darkMode }) => {
         return filtered.filter(task => !task.completed);
       case 'completed':
         return filtered.filter(task => task.completed);
-      default: // 'all' case
+      case 'all':
+        // Sort active tasks first, then completed tasks, both in descending order of last modified
+        return [...filtered].sort((a, b) => {
+          if (a.completed !== b.completed) {
+            return a.completed - b.completed; // Active tasks first
+          }
+          const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+          const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+          return dateB - dateA; // Descending order of last modified
+        });
+      default:
         return filtered;
     }
   }, [tasks, filter, showSecret]);
@@ -72,7 +82,7 @@ const TaskList = ({ tasks, filter, showSecret, dispatch, darkMode }) => {
       {filteredTasks.length > 0 && (
         <div 
           className={`d-flex justify-content-between mb-3 p-2 rounded ${darkMode ? 'bg-dark text-light' : 'bg-light'}`}
-          style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
+          style={{ backgroundColor: darkMode ? '#616161' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
         >
           <div className="form-check">
             <input
@@ -119,7 +129,7 @@ const TaskList = ({ tasks, filter, showSecret, dispatch, darkMode }) => {
       ) : (
         <div 
           className={`task-list ${darkMode ? 'text-light' : ''}`}
-          style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
+          style={{ backgroundColor: darkMode ? '#616161' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
         >
           {filteredTasks.map(task => (
             <TaskItem 

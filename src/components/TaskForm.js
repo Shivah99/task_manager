@@ -176,7 +176,7 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
     <form 
       onSubmit={handleSubmit} 
       className={`card ${darkMode ? 'bg-dark border-secondary text-light' : 'bg-light'} p-3`}
-      style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
+      style={{ backgroundColor: darkMode ? '#616161' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
     >
       <h4 className="mb-3 fw-bold">✨ New Task</h4>
       
