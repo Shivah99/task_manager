@@ -1,23 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import TaskItem from './TaskItem';
 
-const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode }) => {
+const TaskList = ({ tasks, filter, showSecret, dispatch, darkMode }) => {
   const [selectedTasks, setSelectedTasks] = useState([]);
-  
+
   // Memoize filtered tasks
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
-    
+
     // Filter secret tasks if not showing them
     if (!showSecret) {
       filtered = filtered.filter(task => !task.isSecret);
     }
-    
-    // Apply hide completed filter if enabled
-    if (hideCompleted) {
-      filtered = filtered.filter(task => !task.completed);
-    }
-    
+
     // Apply regular filter
     switch (filter) {
       case 'active':
@@ -27,7 +22,7 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       default: // 'all' case
         return filtered;
     }
-  }, [tasks, filter, hideCompleted, showSecret]);
+  }, [tasks, filter, showSecret]);
 
   const handleTaskSelect = (taskId) => {
     setSelectedTasks(prev => {
@@ -38,7 +33,7 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       }
     });
   };
-  
+
   const handleSelectAll = () => {
     if (selectedTasks.length === filteredTasks.length) {
       // If all are selected, deselect all
@@ -48,10 +43,10 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       setSelectedTasks(filteredTasks.map(task => task.id));
     }
   };
-  
+
   const handleDeleteSelected = () => {
     if (selectedTasks.length === 0) return;
-    
+
     if (window.confirm(`Are you sure you want to delete ${selectedTasks.length} tasks?`)) {
       selectedTasks.forEach(taskId => {
         dispatch({ type: 'DELETE_TASK', payload: taskId });
@@ -59,10 +54,10 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       setSelectedTasks([]);
     }
   };
-  
+
   const handleCompleteSelected = () => {
     if (selectedTasks.length === 0) return;
-    
+
     selectedTasks.forEach(taskId => {
       const task = tasks.find(t => t.id === taskId);
       if (!task.completed) {
@@ -76,8 +71,8 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
     <>
       {filteredTasks.length > 0 && (
         <div 
-          className="d-flex justify-content-between mb-3"
-          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+          className={`d-flex justify-content-between mb-3 p-2 rounded ${darkMode ? 'bg-dark text-light' : 'bg-light'}`}
+          style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
         >
           <div className="form-check">
             <input
@@ -87,7 +82,7 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
               checked={selectedTasks.length > 0 && selectedTasks.length === filteredTasks.length}
               onChange={handleSelectAll}
             />
-            <label className="form-check-label" htmlFor="selectAllTasks">
+            <label className={`form-check-label ${darkMode ? 'text-light' : ''}`} htmlFor="selectAllTasks">
               Select All
             </label>
           </div>
@@ -95,14 +90,14 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
           {selectedTasks.length > 0 && (
             <div className="btn-group">
               <button 
-                className="btn btn-sm btn-success"
+                className={`btn btn-sm ${darkMode ? 'btn-outline-light' : 'btn-outline-success'}`}
                 onClick={handleCompleteSelected}
                 title="Mark selected tasks as completed"
               >
                 ✔️ Complete Selected
               </button>
               <button 
-                className="btn btn-sm btn-danger"
+                className={`btn btn-sm ${darkMode ? 'btn-outline-light' : 'btn-outline-danger'}`}
                 onClick={handleDeleteSelected}
                 title="Delete selected tasks"
               >
@@ -115,16 +110,16 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       
       {filteredTasks.length === 0 ? (
         <div 
-          className="alert alert-info text-center p-4"
-          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+          className={`alert ${darkMode ? 'alert-dark text-light' : 'alert-info'} text-center p-4`}
+          style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
         >
           <i className="fas fa-info-circle fa-2x mb-3"></i>
-          <p className="mb-0">No tasks found! {filter !== 'all' || hideCompleted ? 'Try changing the filter.' : 'Add your first task above.'} 🎯</p>
+          <p className="mb-0">No tasks found! {filter !== 'all' ? 'Try changing the filter.' : 'Add your first task above.'} 🎯</p>
         </div>
       ) : (
         <div 
-          className="task-list"
-          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+          className={`task-list ${darkMode ? 'text-light' : ''}`}
+          style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
         >
           {filteredTasks.map(task => (
             <TaskItem 

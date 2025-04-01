@@ -6,7 +6,7 @@ const TaskFilter = ({ filter, dispatch, darkMode }) => {
   };
 
   return (
-    <div className="btn-group">
+    <div className="btn-group ms-auto"> {/* Added ms-auto to push buttons to the right */}
       <button
         className={`btn btn-sm ${filter === 'active' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
         onClick={() => handleFilterChange('active')}
@@ -18,12 +18,6 @@ const TaskFilter = ({ filter, dispatch, darkMode }) => {
         onClick={() => handleFilterChange('completed')}
       >
         Completed
-      </button>
-      <button
-        className={`btn btn-sm ${filter === 'hidden' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}
-        onClick={() => handleFilterChange('hidden')}
-      >
-        Hidden
       </button>
       <button
         className={`btn btn-sm ${filter === 'all' ? 'btn-primary' : `btn-outline-${darkMode ? 'light' : 'primary'}`}`}

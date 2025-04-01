@@ -32,7 +32,7 @@ const loadFromStorage = () => {
 const TaskManager = () => {
   // Use reducer for task state management
   const [state, dispatch] = useReducer(taskReducer, initialState);
-  const { tasks, filter, hideCompleted, showSecret } = state;
+  const { tasks, filter, showSecret } = state;
   
   // State for alerts
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
@@ -150,7 +150,7 @@ const TaskManager = () => {
   }, []);
 
   return (
-    <div className={`container-fluid mt-4 ${darkMode ? 'text-light' : ''}`}>
+    <div className={`container-fluid mt-4 ${darkMode ? 'text-light bg-dark' : ''}`}>
       {/* Alert notification */}
       {alert.show && (
         <div className={`alert alert-${alert.type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`} 
@@ -220,19 +220,7 @@ const TaskManager = () => {
         <div className="tasks-list-container">
           <div className="list-header">
             <h3>Tasks List 📋</h3>
-            <div className="filter-container">
-              <div className="form-check form-switch me-3">
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id="hideCompletedSwitch" 
-                  checked={hideCompleted}
-                  onChange={() => dispatch({ type: 'TOGGLE_HIDE_COMPLETED' })} 
-                />
-                <label className="form-check-label" htmlFor="hideCompletedSwitch">
-                  Hide Completed
-                </label>
-              </div>
+            <div className="filter-container justify-content-end">
               <TaskFilter filter={filter} dispatch={dispatch} darkMode={darkMode} />
             </div>
           </div>
@@ -241,7 +229,6 @@ const TaskManager = () => {
             <TaskList 
               tasks={tasks} 
               filter={filter} 
-              hideCompleted={hideCompleted}
               showSecret={showSecret}
               dispatch={dispatch} 
               darkMode={darkMode} 

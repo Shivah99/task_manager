@@ -3,9 +3,6 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.css';
-import GoogleAnalytics from './GoogleAnalytics';
-// Import reportWebVitals properly or remove the reference if not needed
-// import reportWebVitals from './reportWebVitals';
 
 // Add Font Awesome using proper method
 const fontAwesomeLink = document.createElement('link');
@@ -20,7 +17,6 @@ document.head.appendChild(fontAwesomeLink);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <GoogleAnalytics />
     <App />
   </React.StrictMode>
 );

@@ -175,8 +175,8 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
   return (
     <form 
       onSubmit={handleSubmit} 
-      className={`card ${darkMode ? 'bg-dark border-secondary' : 'bg-light'} p-3`}
-      style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+      className={`card ${darkMode ? 'bg-dark border-secondary text-light' : 'bg-light'} p-3`}
+      style={{ backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9', color: darkMode ? '#ffffff' : '#000000' }}
     >
       <h4 className="mb-3 fw-bold">✨ New Task</h4>
       
@@ -184,7 +184,7 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
         <div className="input-group">
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${darkMode ? 'bg-dark text-light border-secondary' : ''}`}
             placeholder="What needs to be done?"
             value={inputHistory.present}
             onChange={handleInputChange}
@@ -192,7 +192,7 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
           />
           <button 
             type="button" 
-            className="btn btn-outline-secondary" 
+            className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`} 
             onClick={handleUndo}
             disabled={inputHistory.past.length === 0}
             title="Undo text edit"
@@ -201,7 +201,7 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
           </button>
           <button 
             type="button" 
-            className="btn btn-outline-secondary" 
+            className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`} 
             onClick={handleRedo}
             disabled={inputHistory.future.length === 0}
             title="Redo text edit"
@@ -246,25 +246,19 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
         <div className="input-group input-group-sm">
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${darkMode ? 'bg-dark text-light border-secondary' : ''}`}
             placeholder="Add a subtask..."
             value={newSubtask}
             onChange={(e) => setNewSubtask(e.target.value)}
           />
           <button 
             type="button" 
-            className="btn btn-outline-secondary"
+            className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`}
             onClick={handleAddSubtask}
           >
             ➕
           </button>
         </div>
-        
-        {subtasks.length > 0 && (
-          <div className="text-muted small mt-1">
-            <em>Auto-saving draft with {subtasks.length} subtasks...</em>
-          </div>
-        )}
       </div>
 
       <div className="row mb-3">
@@ -277,14 +271,14 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
               checked={isSecret}
               onChange={() => setIsSecret(!isSecret)}
             />
-            <label className="form-check-label" htmlFor="secretTaskCheck">
+            <label className={`form-check-label ${darkMode ? 'text-light' : ''}`} htmlFor="secretTaskCheck">
               🔒 Create as secret task
             </label>
           </div>
         </div>
       </div>
 
-      <button type="submit" className="btn btn-primary w-100">
+      <button type="submit" className={`btn ${darkMode ? 'btn-primary' : 'btn-primary'} w-100`}>
         ➕ Add Task
       </button>
     </form>
