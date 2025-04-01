@@ -47,7 +47,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
     future: []
   });
 
-  const [priority, setPriority] = useState('medium');
   const [taskColor, setTaskColor] = useState('#ffffff');
   const [isSecret, setIsSecret] = useState(false);
   
@@ -62,7 +61,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       if (savedDraft) {
         const draft = JSON.parse(savedDraft);
         dispatchHistory({ type: 'UPDATE_TEXT', payload: draft.title || '' });
-        setPriority(draft.priority || 'medium');
         setTaskColor(draft.backgroundColor || '#ffffff');
         setIsSecret(draft.isSecret || false);
         setSubtasks(draft.subtasks || []);
@@ -78,7 +76,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       try {
         const draft = {
           title: inputHistory.present,
-          priority,
           backgroundColor: taskColor,
           isSecret,
           subtasks
@@ -96,13 +93,13 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
     // Set up autosave timer
     const timer = setInterval(saveDraft, 5000); // Save every 5 seconds
     return () => clearInterval(timer);
-  }, [inputHistory.present, priority, taskColor, isSecret, subtasks]);
+  }, [inputHistory.present, taskColor, isSecret, subtasks]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (inputHistory.present.trim()) {
-      // Add the task with all properties
+      // Add the task without priority
       dispatch({
         type: 'ADD_TASK',
         payload: {
@@ -110,7 +107,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
           title: inputHistory.present.trim(),
           completed: false,
           createdAt: new Date().toISOString(),
-          priority: priority,
           backgroundColor: taskColor,
           isSecret: isSecret,
           subTasks: subtasks.map(st => ({
@@ -122,7 +118,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       
       // Reset form
       dispatchHistory({ type: 'RESET' });
-      setPriority('medium');
       setTaskColor('#ffffff');
       setIsSecret(false);
       setSubtasks([]);
@@ -178,7 +173,11 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
   });
 
   return (
-    <form onSubmit={handleSubmit} className={`card ${darkMode ? 'bg-dark border-secondary' : 'bg-light'} p-3`}>
+    <form 
+      onSubmit={handleSubmit} 
+      className={`card ${darkMode ? 'bg-dark border-secondary' : 'bg-light'} p-3`}
+      style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+    >
       <h4 className="mb-3 fw-bold">✨ New Task</h4>
       
       <div className="mb-3">
@@ -269,21 +268,6 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       </div>
 
       <div className="row mb-3">
-        <div className="col-md-6 mb-2 mb-md-0">
-          <div className="d-flex align-items-center">
-            <label className="form-label mb-0 me-2 fw-bold">🚩 Priority:</label>
-            <select 
-              className="form-select" 
-              value={priority} 
-              onChange={(e) => setPriority(e.target.value)}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="hidden">Hidden</option>
-            </select>
-          </div>
-        </div>
         <div className="col-md-6">
           <div className="form-check">
             <input

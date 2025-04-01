@@ -8,14 +8,11 @@ export const initialState = {
 export const taskReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TASK':
-      // Always ensure there's a creation timestamp
-      const timestamp = new Date().toISOString();
       return {
         ...state,
         tasks: [...state.tasks, {
           ...action.payload,
-          createdAt: action.payload.createdAt || timestamp,
-          priority: action.payload.priority || 'medium',
+          createdAt: action.payload.createdAt || new Date().toISOString(),
           backgroundColor: action.payload.backgroundColor || '#ffffff',
           subTasks: action.payload.subTasks || [],
           isSecret: action.payload.isSecret || state.showSecret,

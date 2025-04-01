@@ -21,11 +21,9 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
     // Apply regular filter
     switch (filter) {
       case 'active':
-        return filtered.filter(task => !task.completed && task.priority !== 'hidden');
+        return filtered.filter(task => !task.completed);
       case 'completed':
         return filtered.filter(task => task.completed);
-      case 'hidden':
-        return filtered.filter(task => task.priority === 'hidden');
       default: // 'all' case
         return filtered;
     }
@@ -77,7 +75,10 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
   return (
     <>
       {filteredTasks.length > 0 && (
-        <div className="d-flex justify-content-between mb-3">
+        <div 
+          className="d-flex justify-content-between mb-3"
+          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+        >
           <div className="form-check">
             <input
               className="form-check-input"
@@ -113,12 +114,18 @@ const TaskList = ({ tasks, filter, hideCompleted, showSecret, dispatch, darkMode
       )}
       
       {filteredTasks.length === 0 ? (
-        <div className="alert alert-info text-center p-4">
+        <div 
+          className="alert alert-info text-center p-4"
+          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+        >
           <i className="fas fa-info-circle fa-2x mb-3"></i>
           <p className="mb-0">No tasks found! {filter !== 'all' || hideCompleted ? 'Try changing the filter.' : 'Add your first task above.'} 🎯</p>
         </div>
       ) : (
-        <div className="task-list">
+        <div 
+          className="task-list"
+          style={{ backgroundColor: darkMode ? '#333' : '#f9f9f9' }} // Light background color
+        >
           {filteredTasks.map(task => (
             <TaskItem 
               key={task.id} 
