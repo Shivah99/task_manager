@@ -12,6 +12,9 @@ code {
     monospace;
 }
 
+/* Import a Google Font for an elegant serif style */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
 /* Add animation for subtask transitions */
 .subtask-container {
   position: relative;
@@ -33,10 +36,42 @@ code {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+  background-color: #EFEEEE; /* Updated header background color */
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow for better visibility */
 }
 
 .app-title {
+  font-family: 'Playfair Display', serif; /* Elegant serif font */
+  font-size: 2.5rem; /* Adjust font size for prominence */
+  font-weight: 700; /* Bold weight for emphasis */
+  color: #FF6F61; /* Vibrant coral color */
   margin-bottom: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Add subtle shadow for depth */
+}
+
+/* Keyframes for hover effect */
+@keyframes icon-hover {
+  0%, 100% {
+    transform: scale(1); /* Normal size */
+  }
+  50% {
+    transform: scale(1.2); /* Slightly larger */
+  }
+}
+
+/* Apply animation to the app title icon */
+.app-title-icon {
+  display: inline-block;
+  animation: icon-hover 1s ease-in-out infinite; /* Infinite animation */
+  animation-delay: 5s; /* Trigger every 5 seconds */
+  transition: transform 0.3s ease-in-out; /* Smooth transition for manual hover */
+}
+
+.app-title-icon:hover {
+  animation: none; /* Disable animation on manual hover */
+  transform: scale(1.2); /* Apply hover effect */
 }
 
 .app-controls {

@@ -1,59 +1,17 @@
-import React, { useState, useReducer, useEffect } from 'react';
-
-// Reducer for form input history
-const historyReducer = (state, action) => {
-  switch (action.type) {
-    case 'UPDATE_TEXT':
-      return {
-        past: [...state.past, state.present],
-        present: action.payload,
-        future: []
-      };
-    case 'UNDO':
-      if (state.past.length === 0) return state;
-      const previous = state.past[state.past.length - 1];
-      return {
-        past: state.past.slice(0, state.past.length - 1),
-        present: previous,
-        future: [state.present, ...state.future]
-      };
-    case 'REDO':
-      if (state.future.length === 0) return state;
-      const next = state.future[0];
-      return {
-        past: [...state.past, state.present],
-        present: next,
-        future: state.future.slice(1)
-      };
-    case 'RESET':
-      return {
-        past: [],
-        present: '',
-        future: []
-      };
-    default:
-      return state;
-  }
-};
+import React, { useState, useEffect } from 'react';
 
 // Draft task storage key
 const DRAFT_TASK_KEY = 'taskDraft';
 
 const TaskForm = ({ dispatch, darkMode, showSecret }) => {
-  // State for task form history (undo/redo)
-  const [inputHistory, dispatchHistory] = useReducer(historyReducer, {
-    past: [],
-    present: '',
-    future: []
-  });
-
+  const [taskTitle, setTaskTitle] = useState('');
   const [taskColor, setTaskColor] = useState('#ffffff');
   const [isSecret, setIsSecret] = useState(false);
-  
+
   // State for subtasks
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState('');
-  
+
   // Restricted color palette
   const colorOptions = [
     '#f8d7da', '#FCBB6D', '#D8737F', '#AB6C82', '#685D79', '#475C7A' // Restricted color palette
@@ -65,7 +23,7 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       const savedDraft = localStorage.getItem(DRAFT_TASK_KEY);
       if (savedDraft) {
         const draft = JSON.parse(savedDraft);
-        dispatchHistory({ type: 'UPDATE_TEXT', payload: draft.title || '' });
+        setTaskTitle(draft.title || '');
         setTaskColor(draft.backgroundColor || '#ffffff');
         setIsSecret(draft.isSecret || false);
         setSubtasks(draft.subtasks || []);
@@ -74,13 +32,13 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       console.error('Error loading draft task:', e);
     }
   }, []);
-  
+
   // Auto save draft task when form changes
   useEffect(() => {
     const saveDraft = () => {
       try {
         const draft = {
-          title: inputHistory.present,
+          title: taskTitle,
           backgroundColor: taskColor,
           isSecret,
           subtasks
@@ -90,26 +48,24 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
         console.error('Error saving draft task:', e);
       }
     };
-    
-    if (inputHistory.present || subtasks.length > 0) {
+
+    if (taskTitle || subtasks.length > 0) {
       saveDraft();
     }
-    
-    // Set up autosave timer
+
     const timer = setInterval(saveDraft, 5000); // Save every 5 seconds
     return () => clearInterval(timer);
-  }, [inputHistory.present, taskColor, isSecret, subtasks]);
+  }, [taskTitle, taskColor, isSecret, subtasks]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (inputHistory.present.trim()) {
-      // Add the task without priority
+
+    if (taskTitle.trim()) {
       dispatch({
         type: 'ADD_TASK',
         payload: {
           id: Date.now().toString(),
-          title: inputHistory.present.trim(),
+          title: taskTitle.trim(),
           completed: false,
           createdAt: new Date().toISOString(),
           backgroundColor: taskColor,
@@ -120,31 +76,19 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
           }))
         }
       });
-      
+
       // Reset form
-      dispatchHistory({ type: 'RESET' });
+      setTaskTitle('');
       setTaskColor('#ffffff');
       setIsSecret(false);
       setSubtasks([]);
       setNewSubtask('');
-      
+
       // Clear draft
       localStorage.removeItem(DRAFT_TASK_KEY);
     }
   };
 
-  const handleInputChange = (e) => {
-    dispatchHistory({ type: 'UPDATE_TEXT', payload: e.target.value });
-  };
-
-  const handleUndo = () => {
-    dispatchHistory({ type: 'UNDO' });
-  };
-
-  const handleRedo = () => {
-    dispatchHistory({ type: 'REDO' });
-  };
-  
   const handleAddSubtask = (e) => {
     e.preventDefault();
     if (newSubtask.trim()) {
@@ -159,17 +103,17 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       setNewSubtask('');
     }
   };
-  
+
   const handleToggleSubtask = (id) => {
-    setSubtasks(subtasks.map(st => 
+    setSubtasks(subtasks.map(st =>
       st.id === id ? { ...st, completed: !st.completed } : st
     ));
   };
-  
+
   const handleRemoveSubtask = (id) => {
     setSubtasks(subtasks.filter(st => st.id !== id));
   };
-  
+
   // Sort subtasks - active first, completed at the bottom
   const sortedSubtasks = [...subtasks].sort((a, b) => {
     if (a.completed && !b.completed) return 1;
@@ -186,34 +130,14 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       <h4 className="mb-3 fw-bold">✨ New Task</h4>
       
       <div className="mb-3">
-        <div className="input-group">
-          <input
-            type="text"
-            className={`form-control ${darkMode ? 'bg-dark text-light border-secondary' : ''}`}
-            placeholder="What needs to be done?"
-            value={inputHistory.present}
-            onChange={handleInputChange}
-            autoFocus
-          />
-          <button 
-            type="button" 
-            className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`} 
-            onClick={handleUndo}
-            disabled={inputHistory.past.length === 0}
-            title="Undo text edit"
-          >
-            ⏪
-          </button>
-          <button 
-            type="button" 
-            className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-secondary'}`} 
-            onClick={handleRedo}
-            disabled={inputHistory.future.length === 0}
-            title="Redo text edit"
-          >
-            ⏩
-          </button>
-        </div>
+        <input
+          type="text"
+          className={`form-control ${darkMode ? 'bg-dark text-light border-secondary' : ''}`}
+          placeholder="What needs to be done?"
+          value={taskTitle}
+          onChange={(e) => setTaskTitle(e.target.value)}
+          autoFocus
+        />
       </div>
       
       {/* Subtasks section */}
@@ -290,19 +214,17 @@ const TaskForm = ({ dispatch, darkMode, showSecret }) => {
       </div>
 
       <div className="row mb-3">
-        <div className="col-md-6">
-          <div className="form-check">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="secretTaskCheck"
-              checked={isSecret}
-              onChange={() => setIsSecret(!isSecret)}
-            />
-            <label className={`form-check-label ${darkMode ? 'text-light' : ''}`} htmlFor="secretTaskCheck">
-              🔒 Create as secret task
-            </label>
-          </div>
+        <div className="col-md-6 d-flex align-items-center gap-2"> {/* Added d-flex and gap-2 */}
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="secretTaskCheck"
+            checked={isSecret}
+            onChange={() => setIsSecret(!isSecret)}
+          />
+          <label className={`form-check-label ${darkMode ? 'text-light' : ''}`} htmlFor="secretTaskCheck">
+            🔒 Create as secret task
+          </label>
         </div>
       </div>
 
